@@ -110,6 +110,7 @@ JitsiConferenceEventManager.prototype.setupChatRoomListeners = function() {
             conference.rtc.setAudioMute(true).then(
                 () => {
                     conference.isMutedByFocus = true;
+		    conference.isSoftMutedByFocus = '2';
                     conference.mutedByFocusActor = null;
                 })
                 .catch(
@@ -120,6 +121,59 @@ JitsiConferenceEventManager.prototype.setupChatRoomListeners = function() {
                     });
         }
     );
+
+    chatRoom.addListener(XMPPEvents.AUDIO_MUTED_BY_FOCUS_SOFT,
+        actor => {
+            // TODO: Add a way to differentiate between commands which caused
+            // us to mute and those that did not change our state (i.e. we were
+            // already muted).
+            Statistics.sendAnalytics(createRemotelyMutedEvent(MediaType.AUDIO));
+
+            conference.mutedByFocusActor = actor;
+
+            // set isMutedByFocus when setAudioMute Promise ends
+            conference.rtc.setAudioMute(true).then(
+                () => {
+                    conference.isMutedByFocus = true;
+                    conference.isSoftMutedByFocus = '3';
+                    conference.mutedByFocusActor = null;
+                })
+                .catch(
+                    error => {
+                        conference.mutedByFocusActor = null;
+                        logger.warn(
+                            'Error while audio muting due to focus request', error);
+                    });
+        }
+    );
+
+
+    // mute-unmute-XX
+    chatRoom.addListener(XMPPEvents.AUDIO_UNMUTED_BY_FOCUS,
+        actor => {
+            // TODO: Add a way to differentiate between commands which caused
+            // us to mute and those that did not change our state (i.e. we were
+            // already muted).
+           //Statistics.sendAnalytics(createRemotelyMutedEvent());
+    
+           // conference.mutedByFocusActor = actor;
+    
+            // set isMutedByFocus when setAudioMute Promise ends
+            conference.rtc.setAudioMute(true).then(
+                () => {
+                    conference.isMutedByFocus = false;
+		    conference.isSoftMutedByFocus = '1';
+                    conference.mutedByFocusActor = null;
+                })
+                .catch(
+                    error => {
+                        conference.mutedByFocusActor = null;
+                        logger.warn(
+                            'Error while audio unmuting due to focus request', error);
+                });
+        }
+    );
+
 
     chatRoom.addListener(XMPPEvents.VIDEO_MUTED_BY_FOCUS,
         actor => {

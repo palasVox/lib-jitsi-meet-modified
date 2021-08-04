@@ -147,6 +147,7 @@ export default function JitsiConference(options) {
         video: false
     };
     this.isMutedByFocus = false;
+    this.isSoftMutedByFocus = '1';
 
     // when muted by focus we receive the jid of the initiator of the mute
     this.mutedByFocusActor = null;
@@ -1574,6 +1575,42 @@ JitsiConference.prototype.muteParticipant = function(id, mediaType) {
         return;
     }
     this.room.muteParticipant(participant.getJid(), true, muteMediaType);
+};
+
+JitsiConference.prototype.muteParticipantSoft = function(id, mediaType) {
+    const muteMediaType = mediaType ? mediaType : MediaType.AUDIO;
+
+    if (muteMediaType !== MediaType.AUDIO && muteMediaType !== MediaType.VIDEO) {
+        logger.error(`Unsupported media type: ${muteMediaType}`);
+
+        return;
+    }
+
+    const participant = this.getParticipantById(id);
+
+    if (!participant) {
+        return;
+    }
+    this.room.muteParticipant(participant.getJid(), 'soft' , muteMediaType);
+};
+
+// mute-unmute-XX
+JitsiConference.prototype.unMuteParticipant = function(id, mediaType) {
+
+    const muteMediaType = mediaType ? mediaType : MediaType.AUDIO;
+
+    if (muteMediaType !== MediaType.AUDIO && muteMediaType !== MediaType.VIDEO) {
+        logger.error(`Unsupported media type: ${muteMediaType}`);
+
+        return;
+    }
+
+    const participant = this.getParticipantById(id);
+
+    if (!participant) {
+        return;
+    }
+    this.room.muteParticipant(participant.getJid(), false, muteMediaType);
 };
 
 /* eslint-disable max-params */
